@@ -1,3 +1,13 @@
+# v1.6.0-dev
+## mm/dd/2018
+
+1. [](#new)
+    * Set minimum requirements to [PHP 7.1.3](https://getgrav.org/blog/raising-php-requirements-2018) 
+    * Updated Doctrine Collections to 1.5
+    * Updated Doctrine Cache to 1.8
+    * Updated Symfony Components to 4.1
+    * Added new `{% throw 404 'Not Found' %}` twig tag (with custom code/message)
+
 # v1.5.2
 ## mm/dd/2018
 
@@ -7,6 +17,8 @@
 1. [](#bugfix)
     * Allow `$page->slug()` to be called before `$page->init()` without breaking the page
     * Fix for `Page::translatedLanguages()` to use routes always [#2163](https://github.com/getgrav/grav/issues/2163)
+    * Fixed `nicetime()` twig function
+    * Allow twig tags `{% script %}`, `{% style %}` and `{% switch %}` to be placed outside of blocks
 
 # v1.5.1
 ## 08/23/2018
