@@ -26,6 +26,7 @@ class ZipBackup
         '.svn',
         '.hg',
         '.idea',
+        '.sass-cache',
         'node_modules'
     ];
 

@@ -10,10 +10,38 @@ namespace Grav\Common\Filesystem;
 
 class Archiver
 {
-    public function __construct($type = 'zip')
+    protected $options = [
+        'ignore_files' => ['.DS_Store'],
+        'ignore_paths' => []
+    ];
+
+    protected $destination;
+
+    public static function create($compression)
     {
-        if ($type == 'zip') {
-            return new ZipArchiver;
+        if ($compression == 'zip') {
+            return new ZipArchiver();
+        } else {
+            return new ZipArchiver();
         }
     }
+
+    public function setDestination($destination)
+    {
+        $this->destination = $destination;
+        return $this;
+    }
+
+    public function setOptions($options)
+    {
+        $this->options = $options + $this->options;
+
+        return $this;
+    }
+
+    public function addFolder($folder)
+    {
+        return $this;
+    }
+
 }

@@ -8,51 +8,54 @@
 
 namespace Grav\Common\Filesystem;
 
-class ZipArchiver extends GenericArchiver
+class ZipArchiver extends Archiver
 {
 
     public function addFolder($source)
     {
-        $base = '';
-
         if (!extension_loaded('zip') || !file_exists($source)) {
             return false;
         }
 
         $zip = new \ZipArchive();
-        if (!$zip->open($this->destination, ZIPARCHIVE::CREATE)) {
+        if (!$zip->open($this->destination, \ZipArchive::CREATE)) {
             return false;
         }
 
-        $source = str_replace('\\', '/', realpath($source));
+        // Get real path for our folder
+        $rootPath = realpath($source);
 
-        if($this->options['include_folder']) {
-            $base = basename($source) . '/';
-            //$zip->addEmptyDir(basename($source) . '/');
-        }
+        $ignore_folders = $this->options['ignore_paths'];
+        $ignore_files = $this->options['ignore_files'];
 
-        if (is_dir($source) === true)
+//        $files = new \RecursiveIteratorIterator(
+//            new \RecursiveDirectoryIterator($rootPath, \RecursiveDirectoryIterator::FOLLOW_SYMLINKS)
+//        );
+
+        $dirItr    = new \RecursiveDirectoryIterator($rootPath, \RecursiveDirectoryIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS | \FilesystemIterator::UNIX_PATHS);
+        $filterItr = new RecursiveDirectoryFilterIterator($dirItr, $rootPath, $ignore_folders, $ignore_files);
+        $files       = new \RecursiveIteratorIterator($filterItr, \RecursiveIteratorIterator::SELF_FIRST);
+
+        foreach ($files as $name => $file)
         {
-            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($source), \RecursiveIteratorIterator::SELF_FIRST);
-            foreach ($files as $file) {
-                $file = str_replace('\\', '/', realpath($file));
-                $local_file = str_replace($source . '/', '', $base.$file);
+            $filePath = $file->getPathname();
+            $relativePath = ltrim(substr($filePath, strlen($rootPath)), '/');
 
-                if (is_dir($file) === true) {
-                    $zip->addEmptyDir($local_file . '/');
-//                    $zip->addEmptyDir(str_replace($source . '/', '', $base.$file . '/'));
-                }
-                else if (is_file($file) === true) {
-                    $zip->addFile($file, $local_file);
-//                    $zip->addFromString(str_replace($source . '/', '', $base.$file, file_get_contents($file));
-
-                }
+            if (!$file->isDir())
+            {
+                // Add current file to archive
+                $zip->addFile($filePath, $relativePath);
+            } else {
+                $zip->addEmptyDir($relativePath);
             }
-        } else if (is_file($source) === true) {
-            $zip->addFile($base.basename($source), $source);
-//            $zip->addFromString($base.basename($source), file_get_contents($source));
         }
 
+        // Add back ignored folders
+        foreach($ignore_folders as $folder) {
+            $zip->addEmptyDir($folder);
+        }
+
+        // Zip archive will be created only after closing object
         $zip->close();
 
         return $this;

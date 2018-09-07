@@ -9,7 +9,7 @@
 namespace Grav\Console\Cli;
 
 use Grav\Common\Grav;
-use Grav\Common\Backup\ZipBackup;
+use Grav\Common\Backup\Backup;
 use Grav\Console\ConsoleCommand;
 use RocketTheme\Toolbox\File\JsonFile;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -54,7 +54,7 @@ class BackupCommand extends ConsoleCommand
 
         $destination = ($this->input->getArgument('destination')) ? $this->input->getArgument('destination') : null;
         $log = JsonFile::instance(Grav::instance()['locator']->findResource("log://backup.log", true, true));
-        $backup = ZipBackup::backup($destination, [$this, 'output']);
+        $backup = Backup::backup($destination, [$this, 'output']);
 
         $log->content([
             'time' => time(),

@@ -8,27 +8,28 @@
 
 namespace Grav\Common\Backup;
 
-use Composer\Package\Archiver\GenericArchiver;
 use Grav\Common\Filesystem\Archiver;
 use Grav\Common\Grav;
 use Grav\Common\Inflector;
 
 class Backup
 {
-    protected static $ignorePaths = [
+    protected static $ignore_paths = [
         'backup',
         'cache',
         'images',
         'logs',
-        'tmp'
+        'tmp',
     ];
 
-    protected static $ignoreFolders = [
+    protected static $ignore_files = [
+        '.DS_Store',
         '.git',
         '.svn',
         '.hg',
         '.idea',
-        'node_modules'
+        '.vscode',
+        'node_modules',
     ];
 
     /**
@@ -70,16 +71,21 @@ class Backup
             'message' => ''
         ]);
 
-        $zip = new \ZipArchive();
-        $zip->open($destination, \ZipArchive::CREATE);
+//        $zip = new \ZipArchive();
+//        $zip->open($destination, \ZipArchive::CREATE);
 
         $max_execution_time = ini_set('max_execution_time', 600);
 
 //        static::folderToZip(GRAV_ROOT, $zip, strlen(rtrim(GRAV_ROOT, DS) . DS), $messager);
 
-        /** @var GenericArchiver $archiver */
-        $archiver = new Archiver('zip');
-        $archiver->setDestination($zip)->addFolder(GRAV_ROOT);
+        $options = [
+            'ignore_files' => static::$ignore_files,
+            'ignore_paths' => static::$ignore_paths,
+        ];
+
+        /** @var Archiver $archiver */
+        $archiver = Archiver::create('zip');
+        $archiver->setDestination($destination)->setOptions($options)->addFolder(GRAV_ROOT);
 
         $messager && $messager([
             'type' => 'progress',
@@ -97,8 +103,6 @@ class Backup
             'level' => 'info',
             'message' => 'Saving and compressing archive...'
         ]);
-
-        $zip->close();
 
         if ($max_execution_time !== false) {
             ini_set('max_execution_time', $max_execution_time);
