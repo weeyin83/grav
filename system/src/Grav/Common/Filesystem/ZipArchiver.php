@@ -11,51 +11,74 @@ namespace Grav\Common\Filesystem;
 class ZipArchiver extends Archiver
 {
 
-    public function addFolder($source)
+    public function extract($destination)
     {
-        if (!extension_loaded('zip') || !file_exists($source)) {
-            return false;
+        $zip = new \ZipArchive();
+        $archive = $zip->open($this->archive_file);
+
+        if ($archive === true) {
+            Folder::mkdir($destination);
+
+            if (!$zip->extractTo($destination)) {
+                throw new \RuntimeException('ZipArchiver: ZIP failed to extract ' . $this->archive_file . ' to ' . $destination);
+            }
+
+            $zip->close();
+            return $this;
+        }
+
+        throw new \RuntimeException('ZipArchiver: Failed to open ' . $this->archive_file);
+    }
+
+    public function compress($source)
+    {
+        if (!extension_loaded('zip')) {
+            throw new \InvalidArgumentException('ZipArchiver: Zip PHP module not installed...');
+        }
+
+        if (!file_exists($source)) {
+            throw new \InvalidArgumentException('ZipArchiver: ' . $source . ' cannot be found...');
         }
 
         $zip = new \ZipArchive();
-        if (!$zip->open($this->destination, \ZipArchive::CREATE)) {
-            return false;
+        if (!$zip->open($this->archive_file, \ZipArchive::CREATE)) {
+            throw new \InvalidArgumentException('ZipArchiver:' . $this->archive_file . ' cannot be created...');
         }
 
         // Get real path for our folder
         $rootPath = realpath($source);
 
-        $ignore_folders = $this->options['ignore_paths'];
-        $ignore_files = $this->options['ignore_files'];
-
-//        $files = new \RecursiveIteratorIterator(
-//            new \RecursiveDirectoryIterator($rootPath, \RecursiveDirectoryIterator::FOLLOW_SYMLINKS)
-//        );
-
-        $dirItr    = new \RecursiveDirectoryIterator($rootPath, \RecursiveDirectoryIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS | \FilesystemIterator::UNIX_PATHS);
-        $filterItr = new RecursiveDirectoryFilterIterator($dirItr, $rootPath, $ignore_folders, $ignore_files);
-        $files       = new \RecursiveIteratorIterator($filterItr, \RecursiveIteratorIterator::SELF_FIRST);
-
-        foreach ($files as $name => $file)
-        {
+        foreach ($this->getArchiveFiles($rootPath) as $name => $file) {
             $filePath = $file->getPathname();
             $relativePath = ltrim(substr($filePath, strlen($rootPath)), '/');
 
-            if (!$file->isDir())
-            {
-                // Add current file to archive
-                $zip->addFile($filePath, $relativePath);
-            } else {
+            if ($file->isDir()) {
                 $zip->addEmptyDir($relativePath);
+            } else {
+                $zip->addFile($filePath, $relativePath);
             }
         }
 
-        // Add back ignored folders
-        foreach($ignore_folders as $folder) {
+        $zip->close();
+
+        return $this;
+    }
+
+    public function addEmptyFolders($folders)
+    {
+        if (!extension_loaded('zip')) {
+            throw new \InvalidArgumentException('ZipArchiver: Zip PHP module not installed...');
+        }
+
+        $zip = new \ZipArchive();
+        if (!$zip->open($this->archive_file)) {
+            throw new \InvalidArgumentException('ZipArchiver: ' . $this->archive_file . ' cannot be opened...');
+        }
+
+        foreach($folders as $folder) {
             $zip->addEmptyDir($folder);
         }
 
-        // Zip archive will be created only after closing object
         $zip->close();
 
         return $this;

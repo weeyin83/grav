@@ -8,14 +8,14 @@
 
 namespace Grav\Common\Filesystem;
 
-class Archiver
+abstract class Archiver
 {
     protected $options = [
         'ignore_files' => ['.DS_Store'],
         'ignore_paths' => []
     ];
 
-    protected $destination;
+    protected $archive_file;
 
     public static function create($compression)
     {
@@ -26,22 +26,33 @@ class Archiver
         }
     }
 
-    public function setDestination($destination)
+    public function setArchive($archive_file)
     {
-        $this->destination = $destination;
+        $this->archive_file = $archive_file;
         return $this;
     }
 
     public function setOptions($options)
     {
         $this->options = $options + $this->options;
-
         return $this;
     }
 
-    public function addFolder($folder)
+    public abstract function compress($folder);
+
+    public abstract function extract($destination);
+
+    public abstract function addEmptyFolders($folders);
+
+    protected function getArchiveFiles($rootPath)
     {
-        return $this;
+        $ignore_folders = $this->options['ignore_paths'];
+        $ignore_files = $this->options['ignore_files'];
+        $dirItr    = new \RecursiveDirectoryIterator($rootPath, \RecursiveDirectoryIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS | \FilesystemIterator::UNIX_PATHS);
+        $filterItr = new RecursiveDirectoryFilterIterator($dirItr, $rootPath, $ignore_folders, $ignore_files);
+        $files       = new \RecursiveIteratorIterator($filterItr, \RecursiveIteratorIterator::SELF_FIRST);
+
+        return $files;
     }
 
 }

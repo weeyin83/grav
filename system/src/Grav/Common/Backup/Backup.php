@@ -85,7 +85,7 @@ class Backup
 
         /** @var Archiver $archiver */
         $archiver = Archiver::create('zip');
-        $archiver->setDestination($destination)->setOptions($options)->addFolder(GRAV_ROOT);
+        $archiver->setArchive($destination)->setOptions($options)->compress(GRAV_ROOT)->addEmptyFolders($options['ignore_paths']);
 
         $messager && $messager([
             'type' => 'progress',
