@@ -48,7 +48,7 @@ class BackupCommand extends ConsoleCommand
     protected function serve()
     {
         $this->progress = new ProgressBar($this->output);
-        $this->progress->setFormat('Archiving <cyan>%current%</cyan> files [<green>%bar%</green>] %percent:3s%% %elapsed:6s% -- %message%');
+        $this->progress->setFormat('Archiving <cyan>%current%</cyan> files [<green>%bar%</green>] <white>%percent:3s%%</white> %elapsed:6s% -- <yellow>%message%</yellow>');
 
         Grav::instance()['config']->init();
 
@@ -66,7 +66,6 @@ class BackupCommand extends ConsoleCommand
         $this->output->writeln('');
         $this->output->writeln('<green>Backup Successfully Created:</green> ' . $backup);
 
-
     }
 
     /**
@@ -80,13 +79,14 @@ class BackupCommand extends ConsoleCommand
                 $freq = intval($steps > 100 ? round($steps / 100) : $steps);
                 $this->progress->setMaxSteps($steps);
                 $this->progress->setRedrawFrequency($freq);
-                $this->progress->setMessage('Compressing...');
+                $this->progress->setMessage('Adding files...');
                 break;
             case 'message':
                 $this->progress->setMessage($args['message']);
+                $this->progress->display();
                 break;
             case 'progress':
-                if ($args['complete']) {
+                if (isset($args['complete']) && $args['complete']) {
                     $this->progress->finish();
                 } else {
                     $this->progress->advance();

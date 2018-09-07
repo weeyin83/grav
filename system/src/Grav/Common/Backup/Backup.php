@@ -76,15 +76,17 @@ class Backup
 
         /** @var Archiver $archiver */
         $archiver = Archiver::create('zip');
-        $archiver->setArchive($destination)->setOptions($options)->compress(GRAV_ROOT, $status)->addEmptyFolders($options['ignore_paths']);
+        $archiver->setArchive($destination)->setOptions($options)->compress(GRAV_ROOT, $status)->addEmptyFolders($options['ignore_paths'], $status);
+
+        $status && $status([
+            'type' => 'message',
+            'message' => 'Done...',
+        ]);
 
         $status && $status([
             'type' => 'progress',
-            'percentage' => false,
             'complete' => true
         ]);
-
-
 
         if ($max_execution_time !== false) {
             ini_set('max_execution_time', $max_execution_time);

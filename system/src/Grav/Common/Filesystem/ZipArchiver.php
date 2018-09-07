@@ -45,8 +45,6 @@ class ZipArchiver extends Archiver
             throw new \InvalidArgumentException('ZipArchiver:' . $this->archive_file . ' cannot be created...');
         }
 
-
-
         // Get real path for our folder
         $rootPath = realpath($source);
 
@@ -69,10 +67,13 @@ class ZipArchiver extends Archiver
 
             $status && $status([
                 'type' => 'progress',
-                'percentage' => false,
-                'complete' => false
             ]);
         }
+
+        $status && $status([
+            'type' => 'message',
+            'message' => 'Compressing...'
+        ]);
 
         $zip->close();
 
@@ -92,12 +93,14 @@ class ZipArchiver extends Archiver
 
         $status && $status([
             'type' => 'message',
-            'level' => 'info',
             'message' => 'Adding empty folders...'
         ]);
 
         foreach($folders as $folder) {
             $zip->addEmptyDir($folder);
+            $status && $status([
+                'type' => 'progress',
+            ]);
         }
 
         $zip->close();
