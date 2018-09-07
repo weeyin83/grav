@@ -36,11 +36,11 @@ class Backup
      * Backup
      *
      * @param string|null   $destination
-     * @param callable|null $messager
+     * @param callable|null $status
      *
      * @return null|string
      */
-    public static function backup($destination = null, callable $messager = null)
+    public static function backup($destination = null, callable $status = null)
     {
         if (!$destination) {
             $destination = Grav::instance()['locator']->findResource('backup://', true);
@@ -60,16 +60,7 @@ class Backup
             $destination = rtrim($destination, DS) . DS . $filename;
         }
 
-        $messager && $messager([
-            'type' => 'message',
-            'level' => 'info',
-            'message' => 'Creating new Backup "' . $destination . '"'
-        ]);
-        $messager && $messager([
-            'type' => 'message',
-            'level' => 'info',
-            'message' => ''
-        ]);
+
 
 //        $zip = new \ZipArchive();
 //        $zip->open($destination, \ZipArchive::CREATE);
@@ -85,24 +76,15 @@ class Backup
 
         /** @var Archiver $archiver */
         $archiver = Archiver::create('zip');
-        $archiver->setArchive($destination)->setOptions($options)->compress(GRAV_ROOT)->addEmptyFolders($options['ignore_paths']);
+        $archiver->setArchive($destination)->setOptions($options)->compress(GRAV_ROOT, $status)->addEmptyFolders($options['ignore_paths']);
 
-        $messager && $messager([
+        $status && $status([
             'type' => 'progress',
             'percentage' => false,
             'complete' => true
         ]);
 
-        $messager && $messager([
-            'type' => 'message',
-            'level' => 'info',
-            'message' => ''
-        ]);
-        $messager && $messager([
-            'type' => 'message',
-            'level' => 'info',
-            'message' => 'Saving and compressing archive...'
-        ]);
+
 
         if ($max_execution_time !== false) {
             ini_set('max_execution_time', $max_execution_time);

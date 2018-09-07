@@ -38,11 +38,11 @@ abstract class Archiver
         return $this;
     }
 
-    public abstract function compress($folder);
+    public abstract function compress($folder, callable $status = null);
 
-    public abstract function extract($destination);
+    public abstract function extract($destination, callable $status = null);
 
-    public abstract function addEmptyFolders($folders);
+    public abstract function addEmptyFolders($folders, callable $status = null);
 
     protected function getArchiveFiles($rootPath)
     {

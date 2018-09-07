@@ -48,13 +48,13 @@ class BackupCommand extends ConsoleCommand
     protected function serve()
     {
         $this->progress = new ProgressBar($this->output);
-        $this->progress->setFormat('Archiving <cyan>%current%</cyan> files [<green>%bar%</green>] %elapsed:6s% %memory:6s%');
+        $this->progress->setFormat('Archiving <cyan>%current%</cyan> files [<green>%bar%</green>] %percent:3s%% %elapsed:6s% -- %message%');
 
         Grav::instance()['config']->init();
 
         $destination = ($this->input->getArgument('destination')) ? $this->input->getArgument('destination') : null;
         $log = JsonFile::instance(Grav::instance()['locator']->findResource("log://backup.log", true, true));
-        $backup = Backup::backup($destination, [$this, 'output']);
+        $backup = Backup::backup($destination, [$this, 'outputProgress']);
 
         $log->content([
             'time' => time(),
@@ -64,17 +64,26 @@ class BackupCommand extends ConsoleCommand
 
         $this->output->writeln('');
         $this->output->writeln('');
+        $this->output->writeln('<green>Backup Successfully Created:</green> ' . $backup);
+
 
     }
 
     /**
      * @param $args
      */
-    public function output($args)
+    public function outputProgress($args)
     {
         switch ($args['type']) {
+            case 'count':
+                $steps = $args['steps'];
+                $freq = intval($steps > 100 ? round($steps / 100) : $steps);
+                $this->progress->setMaxSteps($steps);
+                $this->progress->setRedrawFrequency($freq);
+                $this->progress->setMessage('Compressing...');
+                break;
             case 'message':
-                $this->output->writeln($args['message']);
+                $this->progress->setMessage($args['message']);
                 break;
             case 'progress':
                 if ($args['complete']) {
