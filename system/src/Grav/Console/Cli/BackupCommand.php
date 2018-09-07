@@ -14,6 +14,7 @@ use Grav\Console\ConsoleCommand;
 use RocketTheme\Toolbox\File\JsonFile;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class BackupCommand extends ConsoleCommand
 {
@@ -48,9 +49,13 @@ class BackupCommand extends ConsoleCommand
     protected function serve()
     {
         $this->progress = new ProgressBar($this->output);
-        $this->progress->setFormat('Archiving <cyan>%current%</cyan> files [<green>%bar%</green>] <white>%percent:3s%%</white> %elapsed:6s% -- <yellow>%message%</yellow>');
+        $this->progress->setFormat('Archiving <cyan>%current%</cyan> files [<green>%bar%</green>] <white>%percent:3s%%</white> %elapsed:6s% <yellow>%message%</yellow>');
 
         Grav::instance()['config']->init();
+
+        $io = new SymfonyStyle($this->input, $this->output);
+
+        $io->title('Grav Backup');
 
         $destination = ($this->input->getArgument('destination')) ? $this->input->getArgument('destination') : null;
         $log = JsonFile::instance(Grav::instance()['locator']->findResource("log://backup.log", true, true));
@@ -62,9 +67,8 @@ class BackupCommand extends ConsoleCommand
         ]);
         $log->save();
 
-        $this->output->writeln('');
-        $this->output->writeln('');
-        $this->output->writeln('<green>Backup Successfully Created:</green> ' . $backup);
+        $io->newline(2);
+        $io->success('Backup Successfully Created: ' . $backup);
 
     }
 
