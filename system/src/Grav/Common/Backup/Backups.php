@@ -9,11 +9,14 @@
 namespace Grav\Common\Backup;
 
 use Grav\Common\Filesystem\Archiver;
+use Grav\Common\Filesystem\Folder;
 use Grav\Common\Grav;
 use Grav\Common\Inflector;
 
 class Backups
 {
+    protected $backup_dir;
+
     protected static $ignore_paths = [
         'backup',
         'cache',
@@ -32,6 +35,15 @@ class Backups
         'node_modules',
     ];
 
+    public function init()
+    {
+        $this->backup_dir = Grav::instance()['locator']->findResource('backup://', true);
+
+        if (!$this->backup_dir) {
+            Folder::mkdir($this->backup_dir);
+        }
+    }
+
     /**
      * Backup
      *
@@ -40,14 +52,10 @@ class Backups
      *
      * @return null|string
      */
-    public static function backup($destination = null, callable $status = null)
+    public function backup($destination = null, callable $status = null)
     {
         if (!$destination) {
-            $destination = Grav::instance()['locator']->findResource('backup://', true);
-
-            if (!$destination) {
-                throw new \RuntimeException('The backup folder is missing.');
-            }
+            $destination = $this->backup_dir;
         }
 
         $name = substr(strip_tags(Grav::instance()['config']->get('site.title', basename(GRAV_ROOT))), 0, 20);
@@ -84,6 +92,9 @@ class Backups
         if ($max_execution_time !== false) {
             ini_set('max_execution_time', $max_execution_time);
         }
+
+        // Log the backup
+        Grav::instance()['log']->error('Backup Created: ' . $destination);
 
         return $destination;
     }

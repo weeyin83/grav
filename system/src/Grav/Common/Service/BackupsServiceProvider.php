@@ -16,6 +16,11 @@ class BackupsServiceProvider implements ServiceProviderInterface
 {
     public function register(Container $container)
     {
-        $container['backups'] = new Backups();
+        $container['backups'] = function () {
+            $backups = new Backups();
+            $backups->init();
+
+            return $backups;
+        };
     }
 }

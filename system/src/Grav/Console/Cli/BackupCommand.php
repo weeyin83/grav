@@ -59,14 +59,8 @@ class BackupCommand extends ConsoleCommand
         $io->title('Grav Backup');
 
         $destination = ($this->input->getArgument('destination')) ? $this->input->getArgument('destination') : null;
-        $log = JsonFile::instance(Grav::instance()['locator']->findResource("log://backup.log", true, true));
-        $backup = Grav::instance()['backups']->backup($destination, [$this, 'outputProgress']);
 
-        $log->content([
-            'time' => time(),
-            'location' => $backup
-        ]);
-        $log->save();
+        $backup = Grav::instance()['backups']->backup($destination, [$this, 'outputProgress']);
 
         $io->newline(2);
         $io->success('Backup Successfully Created: ' . $backup);
