@@ -55,6 +55,7 @@ class Grav extends Container
         'Grav\Common\Service\StreamsServiceProvider',
         'Grav\Common\Service\ConfigServiceProvider',
         'Grav\Common\Service\InflectorServiceProvider',
+        'Grav\Common\Service\BackupsServiceProvider',
         'inflector'               => 'Grav\Common\Inflector',
         'siteSetupProcessor'      => 'Grav\Common\Processors\SiteSetupProcessor',
         'configurationProcessor'  => 'Grav\Common\Processors\ConfigurationProcessor',

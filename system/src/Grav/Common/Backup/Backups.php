@@ -12,7 +12,7 @@ use Grav\Common\Filesystem\Archiver;
 use Grav\Common\Grav;
 use Grav\Common\Inflector;
 
-class Backup
+class Backups
 {
     protected static $ignore_paths = [
         'backup',
@@ -60,14 +60,7 @@ class Backup
             $destination = rtrim($destination, DS) . DS . $filename;
         }
 
-
-
-//        $zip = new \ZipArchive();
-//        $zip->open($destination, \ZipArchive::CREATE);
-
         $max_execution_time = ini_set('max_execution_time', 600);
-
-//        static::folderToZip(GRAV_ROOT, $zip, strlen(rtrim(GRAV_ROOT, DS) . DS), $messager);
 
         $options = [
             'ignore_files' => static::$ignore_files,
@@ -94,7 +87,5 @@ class Backup
 
         return $destination;
     }
-
-
 
 }
