@@ -55,7 +55,7 @@ class ZipArchiver extends Archiver
             'steps' => iterator_count($files),
         ]);
 
-        foreach ($files as $name => $file) {
+        foreach ($files as $file) {
             $filePath = $file->getPathname();
             $relativePath = ltrim(substr($filePath, strlen($rootPath)), '/');
 

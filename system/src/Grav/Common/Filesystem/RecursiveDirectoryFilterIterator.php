@@ -8,8 +8,6 @@
 
 namespace Grav\Common\Filesystem;
 
-use Grav\Common\Grav;
-
 class RecursiveDirectoryFilterIterator extends \RecursiveFilterIterator
 {
     protected static $root;

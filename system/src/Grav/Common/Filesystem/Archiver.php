@@ -11,8 +11,8 @@ namespace Grav\Common\Filesystem;
 abstract class Archiver
 {
     protected $options = [
-        'ignore_files' => ['.DS_Store'],
-        'ignore_paths' => []
+        'exclude_files' => ['.DS_Store'],
+        'exclude_paths' => []
     ];
 
     protected $archive_file;
@@ -46,10 +46,10 @@ abstract class Archiver
 
     protected function getArchiveFiles($rootPath)
     {
-        $ignore_folders = $this->options['ignore_paths'];
-        $ignore_files = $this->options['ignore_files'];
+        $exclude_paths = $this->options['exclude_paths'];
+        $exclude_files = $this->options['exclude_files'];
         $dirItr    = new \RecursiveDirectoryIterator($rootPath, \RecursiveDirectoryIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS | \FilesystemIterator::UNIX_PATHS);
-        $filterItr = new RecursiveDirectoryFilterIterator($dirItr, $rootPath, $ignore_folders, $ignore_files);
+        $filterItr = new RecursiveDirectoryFilterIterator($dirItr, $rootPath, $exclude_paths, $exclude_files);
         $files       = new \RecursiveIteratorIterator($filterItr, \RecursiveIteratorIterator::SELF_FIRST);
 
         return $files;

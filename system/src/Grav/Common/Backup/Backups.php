@@ -11,11 +11,13 @@ namespace Grav\Common\Backup;
 use Grav\Common\Filesystem\Archiver;
 use Grav\Common\Filesystem\Folder;
 use Grav\Common\Grav;
-use Grav\Common\Inflector;
+use RocketTheme\Toolbox\ResourceLocator\UniformResourceLocator;
 
 class Backups
 {
     protected $backup_dir;
+
+    protected $backup_dateformat = 'YmdHis';
 
     protected static $ignore_paths = [
         'backup',
@@ -44,40 +46,60 @@ class Backups
         }
     }
 
+    public function getExistingBackups()
+    {
+        $backups = new \GlobIterator($this->backup_dir . '/*.zip', FilesystemIterator::KEY_AS_FILENAME);
+        foreach ($backups as $name => $backup) {
+
+
+        }
+    }
+
     /**
      * Backup
      *
-     * @param string|null   $destination
+     * @param int   $id
      * @param callable|null $status
      *
      * @return null|string
      */
-    public function backup($destination = null, callable $status = null)
+    public function backup($id = 0, callable $status = null)
     {
-        if (!$destination) {
-            $destination = $this->backup_dir;
+        $config = Grav::instance()['config']->get('backups');
+        /** @var UniformResourceLocator $locator */
+        $locator = Grav::instance()['locator'];
+
+        if (isset($config['backups'][$id])) {
+            $backup = (object) $config['backups'][$id];
+        } else {
+            throw new \RuntimeException('No backups defined...');
         }
 
-        $name = substr(strip_tags(Grav::instance()['config']->get('site.title', basename(GRAV_ROOT))), 0, 20);
-
-        $inflector = new Inflector();
-
-        if (is_dir($destination)) {
-            $date = date('YmdHis', time());
-            $filename = trim($inflector->hyphenize($name), '-') . '-' . $date . '.zip';
-            $destination = rtrim($destination, DS) . DS . $filename;
-        }
-
+        $name = Grav::instance()['inflector']->underscorize($backup->name);
+        $date = date($this->backup_dateformat, time());
+        $filename = trim($name, '_') . '--' . $date . '.zip';
+        $destination = $this->backup_dir. DS . $filename;
         $max_execution_time = ini_set('max_execution_time', 600);
+        $backup_root = $backup->root;
+
+        if ($locator->isStream($backup_root)) {
+            $backup_root = $locator->findResource($backup_root);
+        } else {
+            $backup_root = rtrim(GRAV_ROOT . $backup_root, '/');
+        }
+
+        if (!file_exists($backup_root)) {
+            throw new \RuntimeException("Backup location: " . $backup_root . ' does not exist...');
+        }
 
         $options = [
-            'ignore_files' => static::$ignore_files,
-            'ignore_paths' => static::$ignore_paths,
+            'exclude_files' => $this->convertExclude($backup->exclude_files),
+            'exclude_paths' => $this->convertExclude($backup->exclude_paths),
         ];
 
         /** @var Archiver $archiver */
         $archiver = Archiver::create('zip');
-        $archiver->setArchive($destination)->setOptions($options)->compress(GRAV_ROOT, $status)->addEmptyFolders($options['ignore_paths'], $status);
+        $archiver->setArchive($destination)->setOptions($options)->compress($backup_root, $status)->addEmptyFolders($options['exclude_paths'], $status);
 
         $status && $status([
             'type' => 'message',
@@ -97,6 +119,12 @@ class Backups
         Grav::instance()['log']->error('Backup Created: ' . $destination);
 
         return $destination;
+    }
+
+    protected function convertExclude($exclude)
+    {
+        $lines = preg_split("/[\s,]+/", $exclude);
+        return array_map('trim', $lines, array_fill(0,count($lines),'/'));
     }
 
 }

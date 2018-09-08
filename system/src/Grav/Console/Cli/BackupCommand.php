@@ -9,9 +9,7 @@
 namespace Grav\Console\Cli;
 
 use Grav\Common\Grav;
-use Grav\Common\Backup\Backups;
 use Grav\Console\ConsoleCommand;
-use RocketTheme\Toolbox\File\JsonFile;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -32,9 +30,9 @@ class BackupCommand extends ConsoleCommand
         $this
             ->setName("backup")
             ->addArgument(
-                'destination',
+                'id',
                 InputArgument::OPTIONAL,
-                'Where to store the backup (/backup is default)'
+                'The ID of the backup to perform without prompting'
 
             )
             ->setDescription("Creates a backup of the Grav instance")
@@ -58,9 +56,7 @@ class BackupCommand extends ConsoleCommand
 
         $io->title('Grav Backup');
 
-        $destination = ($this->input->getArgument('destination')) ? $this->input->getArgument('destination') : null;
-
-        $backup = Grav::instance()['backups']->backup($destination, [$this, 'outputProgress']);
+        $backup = Grav::instance()['backups']->backup(0, [$this, 'outputProgress']);
 
         $io->newline(2);
         $io->success('Backup Successfully Created: ' . $backup);

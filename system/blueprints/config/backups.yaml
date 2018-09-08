@@ -43,6 +43,8 @@ form:
           style: vertical
           label:
           classes: backups-list compact
+          sort: false
+
           fields:
             .name:
               type: text
