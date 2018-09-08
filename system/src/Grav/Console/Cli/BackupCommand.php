@@ -50,6 +50,7 @@ class BackupCommand extends ConsoleCommand
     {
         $this->progress = new ProgressBar($this->output);
         $this->progress->setFormat('Archiving <cyan>%current%</cyan> files [<green>%bar%</green>] <white>%percent:3s%%</white> %elapsed:6s% <yellow>%message%</yellow>');
+        $this->progress->setBarWidth(100);
 
         Grav::instance()['config']->init();
 
