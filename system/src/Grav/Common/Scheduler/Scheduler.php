@@ -49,9 +49,10 @@ class Scheduler
     /**
      * Load saved jobs from config/scheduler.yaml file
      */
-    public function loadSavedJobs()
+    public function loadSavedJobs($force = false)
     {
-        if (!$this->jobs) {
+        if ($force || !$this->jobs) {
+            $this->jobs = [];
             $saved_jobs = (array) Grav::instance()['config']->get('scheduler.custom_jobs', []);
 
             foreach ($saved_jobs as $id => $j) {
@@ -76,6 +77,7 @@ class Scheduler
                 $this->saved_jobs[] = $job;
             }
         }
+        return $this;
     }
 
     /**
