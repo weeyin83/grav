@@ -45,6 +45,11 @@ form:
           validate:
             required: true
 
+        profiles_title:
+          type: section
+          title: PLUGIN_ADMIN.BACKUPS_PROFILES
+          underline: true
+
         backups:
           type: list
           style: vertical
