@@ -20,7 +20,7 @@ class Backups
     protected $backup_dir;
     protected $backup_dateformat = 'YmdHis';
 
-    protected $backups = [];
+    protected $backups = null;
 
     public function init()
     {
@@ -50,33 +50,45 @@ class Backups
         return array_column($this->getBackupProfiles(), 'name');
     }
 
+    public function getTotalBackupsSize()
+    {
+        $backups = $this->getAvailableBackups();
+        $size = array_sum(array_column($backups, 'size'));
+
+        return $size ?? 0;
+    }
+
     public function getAvailableBackups()
     {
-        $backups_itr = new \GlobIterator($this->backup_dir . '/*.zip', \FilesystemIterator::KEY_AS_FILENAME);
-        $inflector = Grav::instance()['inflector'];
-        $long_date_format = DATE_RFC850;
+        if (is_null($this->backups)) {
+            $this->backups = [];
+            $backups_itr = new \GlobIterator($this->backup_dir . '/*.zip', \FilesystemIterator::KEY_AS_FILENAME);
+            $inflector = Grav::instance()['inflector'];
+            $long_date_format = DATE_RFC850;
 
-        /**
-         * @var string $name
-         * @var \SplFileInfo $file
-         */
-        foreach ($backups_itr as $name => $file) {
+            /**
+             * @var string $name
+             * @var \SplFileInfo $file
+             */
+            foreach ($backups_itr as $name => $file) {
 
-            if (preg_match($this::BACKUP_FILENAME_REGEXZ, $name, $matches)) {
-                $date = \DateTime::createFromFormat($this->backup_dateformat, $matches[2]);
-                $timestamp = $date->getTimestamp();
-                $backup = new \stdClass();
-                $backup->title = $inflector->titleize($matches[1]);
-                $backup->date = $date->format($long_date_format);
-                $backup->filename = $name;
-                $backup->path = $file->getPathname();
-                $backup->size = $file->getSize();
-                $this->backups[$timestamp] = $backup;
+                if (preg_match($this::BACKUP_FILENAME_REGEXZ, $name, $matches)) {
+                    $date = \DateTime::createFromFormat($this->backup_dateformat, $matches[2]);
+                    $timestamp = $date->getTimestamp();
+                    $backup = new \stdClass();
+                    $backup->title = $inflector->titleize($matches[1]);
+                    $backup->time = $date;
+                    $backup->date = $date->format($long_date_format);
+                    $backup->filename = $name;
+                    $backup->path = $file->getPathname();
+                    $backup->size = $file->getSize();
+                    $this->backups[$timestamp] = $backup;
+                }
+
             }
-
+            // Reverse Key Sort to get in reverse date order
+            krsort($this->backups);
         }
-        // Reverse Key Sort to get in reverse date order
-        krsort($this->backups);
 
         return $this->backups;
     }

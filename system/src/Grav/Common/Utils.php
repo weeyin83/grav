@@ -1050,15 +1050,22 @@ abstract class Utils
     /**
      * Return a pretty size based on bytes
      *
-     * @param $bytes
+     * @param int $bytes
+     * @param int $precision
      * @return string
      */
-    public static function prettySize($bytes)
-    {
-        $base = log($bytes) / log(1024);
-        $suffix = array("", "KB", "MB", "GB", "TB");
-        $f_base = intval(floor($base));
-        return round(pow(1024, $base - floor($base)), 1) . $suffix[$f_base];
+    public static function prettySize($bytes, $precision = 2) {
+        $units = array('B', 'KB', 'MB', 'GB', 'TB');
+
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+
+        // Uncomment one of the following alternatives
+         $bytes /= pow(1024, $pow);
+        // $bytes /= (1 << (10 * $pow));
+
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
     /**
