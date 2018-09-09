@@ -56,7 +56,7 @@ form:
                   required: true
             .enabled:
                 type: toggle
-                label: Enable Scheduled Job
+                label: Enable Backup
                 highlight: 1
                 default: 1
                 options:
