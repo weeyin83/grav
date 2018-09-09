@@ -10,49 +10,61 @@ namespace Grav\Common\Backup;
 
 use Grav\Common\Filesystem\Archiver;
 use Grav\Common\Filesystem\Folder;
+use Grav\Common\Utils;
 use Grav\Common\Grav;
 use RocketTheme\Toolbox\ResourceLocator\UniformResourceLocator;
 
 class Backups
 {
+    const BACKUP_FILENAME_REGEXZ = "#(.*)--(\d*).zip#";
     protected $backup_dir;
-
     protected $backup_dateformat = 'YmdHis';
 
-    protected static $ignore_paths = [
-        'backup',
-        'cache',
-        'images',
-        'logs',
-        'tmp',
-    ];
-
-    protected static $ignore_files = [
-        '.DS_Store',
-        '.git',
-        '.svn',
-        '.hg',
-        '.idea',
-        '.vscode',
-        'node_modules',
-    ];
+    protected $backups = [];
 
     public function init()
     {
-        $this->backup_dir = Grav::instance()['locator']->findResource('backup://', true);
-
-        if (!$this->backup_dir) {
-            Folder::mkdir($this->backup_dir);
+        if (is_null($this->backup_dir)) {
+            $this->backup_dir = Grav::instance()['locator']->findResource('backup://', true, true);
+            Folder::create($this->backup_dir);
         }
+
+    }
+
+    public function getBackupDownloadUrl($backup, $base_url)
+    {
+        $param_sep = $param_sep = Grav::instance()['config']->get('system.param_sep', ':');
+
+        $download = urlencode(base64_encode($backup));
+        $url      = rtrim(Grav::instance()['uri']->rootUrl(true), '/') . '/' . trim($base_url,
+                '/') . '/task' . $param_sep . 'backup/download' . $param_sep . $download . '/admin-nonce' . $param_sep . Utils::getNonce('admin-form');
+        return $url;
     }
 
     public function getExistingBackups()
     {
-        $backups = new \GlobIterator($this->backup_dir . '/*.zip', FilesystemIterator::KEY_AS_FILENAME);
-        foreach ($backups as $name => $backup) {
+        $backups_itr = new \GlobIterator($this->backup_dir . '/*.zip', \FilesystemIterator::KEY_AS_FILENAME);
+        $inflector = Grav::instance()['inflector'];
+        $long_date_format = DATE_RFC850;
 
+        foreach ($backups_itr as $name => $file) {
+
+            if (preg_match($this::BACKUP_FILENAME_REGEXZ, $name, $matches)) {
+                $date = \DateTime::createFromFormat($this->backup_dateformat, $matches[2]);
+                $timestamp = $date->getTimestamp();
+                $backup = new \stdClass();
+                $backup->title = $inflector->titleize($matches[1]);
+                $backup->date = $date->format($long_date_format);
+                $backup->filename = $name;
+                $backup->path = $file->getPathname();
+                $this->backups[$timestamp] = $backup;
+            }
 
         }
+        // Reverse Key Sort to get in reverse date order
+        krsort($this->backups);
+
+        return $this->backups;
     }
 
     /**
