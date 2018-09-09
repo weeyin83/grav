@@ -1029,6 +1029,39 @@ abstract class Utils
     }
 
     /**
+     * Convert bytes to the unit specified by the $to parameter.
+     *
+     * @param integer $bytes The filesize in Bytes.
+     * @param string $to The unit type to convert to. Accepts K, M, or G for Kilobytes, Megabytes, or Gigabytes, respectively.
+     * @param integer $decimal_places The number of decimal places to return.
+     *
+     * @return integer Returns only the number of units, not the type letter. Returns 0 if the $to unit type is out of scope.
+     *
+     */
+    public static function convertSize($bytes, $to, $decimal_places = 1) {
+        $formulas = array(
+            'K' => number_format($bytes / 1024, $decimal_places),
+            'M' => number_format($bytes / 1048576, $decimal_places),
+            'G' => number_format($bytes / 1073741824, $decimal_places)
+        );
+        return isset($formulas[$to]) ? $formulas[$to] : 0;
+    }
+
+    /**
+     * Return a pretty size based on bytes
+     *
+     * @param $bytes
+     * @return string
+     */
+    public static function prettySize($bytes)
+    {
+        $base = log($bytes) / log(1024);
+        $suffix = array("", "KB", "MB", "GB", "TB");
+        $f_base = intval(floor($base));
+        return round(pow(1024, $base - floor($base)), 1) . $suffix[$f_base];
+    }
+
+    /**
      * Parse a readable file size and return a value in bytes
      *
      * @param $size

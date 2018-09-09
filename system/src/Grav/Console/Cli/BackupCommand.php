@@ -59,7 +59,7 @@ class BackupCommand extends ConsoleCommand
 
         /** @var Backups $backups */
         $backups = Grav::instance()['backups'];
-        $backups_list = $backups->getBackupConfigurations();
+        $backups_list = $backups->getBackupProfiles();
         $backups_names = $backups->getBackupNames();
         $id = 0;
 

@@ -38,6 +38,13 @@ form:
             size: x-small
             default: 365
 
+        purge_at:
+          type: cron
+          label: Run Purge Job
+          default: '* * * * *'
+          validate:
+            required: true
+
         backups:
           type: list
           style: vertical

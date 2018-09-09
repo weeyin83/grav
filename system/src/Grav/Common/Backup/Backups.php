@@ -40,14 +40,14 @@ class Backups
         return $url;
     }
 
-    public function getBackupConfigurations()
+    public function getBackupProfiles()
     {
         return Grav::instance()['config']->get('backups.backups');
     }
 
     public function getBackupNames()
     {
-        return array_column($this->getBackupConfigurations(), 'name');
+        return array_column($this->getBackupProfiles(), 'name');
     }
 
     public function getAvailableBackups()
@@ -56,6 +56,10 @@ class Backups
         $inflector = Grav::instance()['inflector'];
         $long_date_format = DATE_RFC850;
 
+        /**
+         * @var string $name
+         * @var \SplFileInfo $file
+         */
         foreach ($backups_itr as $name => $file) {
 
             if (preg_match($this::BACKUP_FILENAME_REGEXZ, $name, $matches)) {
@@ -66,6 +70,7 @@ class Backups
                 $backup->date = $date->format($long_date_format);
                 $backup->filename = $name;
                 $backup->path = $file->getPathname();
+                $backup->size = $file->getSize();
                 $this->backups[$timestamp] = $backup;
             }
 
