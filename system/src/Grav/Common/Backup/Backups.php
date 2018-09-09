@@ -28,7 +28,6 @@ class Backups
             $this->backup_dir = Grav::instance()['locator']->findResource('backup://', true, true);
             Folder::create($this->backup_dir);
         }
-
     }
 
     public function getBackupDownloadUrl($backup, $base_url)
@@ -41,7 +40,17 @@ class Backups
         return $url;
     }
 
-    public function getExistingBackups()
+    public function getBackupConfigurations()
+    {
+        return Grav::instance()['config']->get('backups.backups');
+    }
+
+    public function getBackupNames()
+    {
+        return array_column($this->getBackupConfigurations(), 'name');
+    }
+
+    public function getAvailableBackups()
     {
         $backups_itr = new \GlobIterator($this->backup_dir . '/*.zip', \FilesystemIterator::KEY_AS_FILENAME);
         $inflector = Grav::instance()['inflector'];

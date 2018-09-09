@@ -54,16 +54,6 @@ form:
                   max: 20
                   message: 'Name must be less than 20 characters'
                   required: true
-            .enabled:
-                type: toggle
-                label: Enable Backup
-                highlight: 1
-                default: 1
-                options:
-                    1: PLUGIN_ADMIN.YES
-                    0: PLUGIN_ADMIN.NO
-                validate:
-                    type: bool
             .root:
               type: text
               label: Root Folder
@@ -72,31 +62,18 @@ form:
               default: '/'
               validate:
                   required: true
-
-            .compression:
-                type: select
-                label: Compression Format
-                default: zip
-                options:
-                    zip: ZIP
-                    tgz: TGZ
-                validate:
-                    required: true
-
             .exclude_paths:
               type: textarea
               label: Exclude Paths
               rows: 5
               placeholder: "/backup\r/cache\r/images\r/logs\r/tmp"
               help: Absolute paths to exclude, one per line
-
             .exclude_files:
                 type: textarea
                 label: Exclude Files
                 rows: 5
                 placeholder: ".DS_Store\r.git\r.svn\r.hg\r.idea\r.vscode\rnode_modules"
                 help: Specfic Files or Folders to exclude, one per line
-
             .schedule:
                 type: toggle
                 label: Enable Scheduled Job
@@ -107,16 +84,10 @@ form:
                     0: PLUGIN_ADMIN.NO
                 validate:
                     type: bool
-
             .schedule_at:
                 type: cron
                 label: Run Scheduled Job
                 default: '* * * * *'
                 validate:
                     required: true
-
-
-
-
-
 

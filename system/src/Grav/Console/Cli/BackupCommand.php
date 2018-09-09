@@ -8,6 +8,7 @@
 
 namespace Grav\Console\Cli;
 
+use Grav\Common\Backup\Backups;
 use Grav\Common\Grav;
 use Grav\Console\ConsoleCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -56,31 +57,31 @@ class BackupCommand extends ConsoleCommand
         $io = new SymfonyStyle($this->input, $this->output);
         $io->title('Grav Backup');
 
+        /** @var Backups $backups */
         $backups = Grav::instance()['backups'];
-        $backups_list = Grav::instance()['config']->get('backups.backups');
-        $backups_titles = array_column($backups_list, 'name');
+        $backups_list = $backups->getBackupConfigurations();
+        $backups_names = $backups->getBackupNames();
         $id = 0;
 
         if (count($backups_list) > 1) {
             $helper = $this->getHelper('question');
             $question = new ChoiceQuestion(
                 'Choose a backup?',
-                $backups_titles,
+                $backups_names,
                 0
             );
             $question->setErrorMessage('Option %s is invalid.');
             $backup_name = $helper->ask($this->input, $this->output, $question);
+            $id = array_search($backup_name, $backups_names);
 
+            $io->newLine();
             $io->note('Selected backup: ' . $backup_name);
-
-            $id = array_search($backup_name, $backups_titles);
         }
 
         $backup = $backups->backup($id, [$this, 'outputProgress']);
 
         $io->newline(2);
         $io->success('Backup Successfully Created: ' . $backup);
-
     }
 
     /**
