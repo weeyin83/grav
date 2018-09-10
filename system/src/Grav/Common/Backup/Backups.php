@@ -10,23 +10,54 @@ namespace Grav\Common\Backup;
 
 use Grav\Common\Filesystem\Archiver;
 use Grav\Common\Filesystem\Folder;
+use Grav\Common\Inflector;
+use Grav\Common\Scheduler\Job;
+use Grav\Common\Scheduler\Scheduler;
 use Grav\Common\Utils;
 use Grav\Common\Grav;
+use RocketTheme\Toolbox\Event\Event;
+use RocketTheme\Toolbox\Event\EventDispatcher;
 use RocketTheme\Toolbox\ResourceLocator\UniformResourceLocator;
 
 class Backups
 {
     const BACKUP_FILENAME_REGEXZ = "#(.*)--(\d*).zip#";
-    protected $backup_dir;
-    protected $backup_dateformat = 'YmdHis';
+    const BACKUP_DATE_FORMAT = 'YmdHis';
+    protected static $backup_dir;
 
     protected $backups = null;
 
     public function init()
     {
-        if (is_null($this->backup_dir)) {
-            $this->backup_dir = Grav::instance()['locator']->findResource('backup://', true, true);
-            Folder::create($this->backup_dir);
+        if (is_null(static::$backup_dir)) {
+            static::$backup_dir = Grav::instance()['locator']->findResource('backup://', true, true);
+            Folder::create(static::$backup_dir);
+        }
+    }
+
+    public function setup()
+    {
+        /** @var EventDispatcher $dispatcher */
+        $dispatcher = Grav::instance()['events'];
+        $dispatcher->addListener('onSchedulerInitialized', [$this, 'onSchedulerInitialized']);
+    }
+
+    public function onSchedulerInitialized(Event $event)
+    {
+        /** @var Scheduler $scheduler */
+        $scheduler = $event['scheduler'];
+
+        /** @var Inflector $inflector */
+        $inflector = Grav::instance()['inflector'];
+
+        foreach ($this->getBackupProfiles() as $id => $profile) {
+            $at = $profile['schedule_at'];
+            $name = $inflector->hyphenize($profile['name']);
+            $logs = 'logs/backup-' . $name . '.out';
+            /** @var Job $job */
+            $job = $scheduler->addFunction('Grav\Common\Backup\Backups::backup', [$id], $name );
+            $job->at($at);
+            $job->output($logs);
         }
     }
 
@@ -62,7 +93,7 @@ class Backups
     {
         if (is_null($this->backups)) {
             $this->backups = [];
-            $backups_itr = new \GlobIterator($this->backup_dir . '/*.zip', \FilesystemIterator::KEY_AS_FILENAME);
+            $backups_itr = new \GlobIterator(static::$backup_dir . '/*.zip', \FilesystemIterator::KEY_AS_FILENAME);
             $inflector = Grav::instance()['inflector'];
             $long_date_format = DATE_RFC850;
 
@@ -73,7 +104,7 @@ class Backups
             foreach ($backups_itr as $name => $file) {
 
                 if (preg_match($this::BACKUP_FILENAME_REGEXZ, $name, $matches)) {
-                    $date = \DateTime::createFromFormat($this->backup_dateformat, $matches[2]);
+                    $date = \DateTime::createFromFormat($this::BACKUP_DATE_FORMAT, $matches[2]);
                     $timestamp = $date->getTimestamp();
                     $backup = new \stdClass();
                     $backup->title = $inflector->titleize($matches[1]);
@@ -101,7 +132,7 @@ class Backups
      *
      * @return null|string
      */
-    public function backup($id = 0, callable $status = null)
+    public static function backup($id = 0, callable $status = null)
     {
         $config = Grav::instance()['config']->get('backups');
         /** @var UniformResourceLocator $locator */
@@ -114,9 +145,9 @@ class Backups
         }
 
         $name = Grav::instance()['inflector']->underscorize($backup->name);
-        $date = date($this->backup_dateformat, time());
+        $date = date(static::BACKUP_DATE_FORMAT, time());
         $filename = trim($name, '_') . '--' . $date . '.zip';
-        $destination = $this->backup_dir. DS . $filename;
+        $destination = static::$backup_dir . DS . $filename;
         $max_execution_time = ini_set('max_execution_time', 600);
         $backup_root = $backup->root;
 
@@ -131,8 +162,8 @@ class Backups
         }
 
         $options = [
-            'exclude_files' => $this->convertExclude($backup->exclude_files),
-            'exclude_paths' => $this->convertExclude($backup->exclude_paths),
+            'exclude_files' => static::convertExclude($backup->exclude_files),
+            'exclude_paths' => static::convertExclude($backup->exclude_paths),
         ];
 
         /** @var Archiver $archiver */
@@ -159,7 +190,7 @@ class Backups
         return $destination;
     }
 
-    protected function convertExclude($exclude)
+    protected static function convertExclude($exclude)
     {
         $lines = preg_split("/[\s,]+/", $exclude);
         return array_map('trim', $lines, array_fill(0,count($lines),'/'));
