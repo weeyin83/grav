@@ -61,21 +61,31 @@ class BackupCommand extends ConsoleCommand
         $backups = Grav::instance()['backups'];
         $backups_list = $backups->getBackupProfiles();
         $backups_names = $backups->getBackupNames();
-        $id = 0;
 
-        if (count($backups_list) > 1) {
-            $helper = $this->getHelper('question');
-            $question = new ChoiceQuestion(
-                'Choose a backup?',
-                $backups_names,
-                0
-            );
-            $question->setErrorMessage('Option %s is invalid.');
-            $backup_name = $helper->ask($this->input, $this->output, $question);
-            $id = array_search($backup_name, $backups_names);
+        $id = null;
 
-            $io->newLine();
-            $io->note('Selected backup: ' . $backup_name);
+        $inline_id = $this->input->getArgument('id');
+        if (isset($inline_id) && is_numeric($inline_id)) {
+            $id = $inline_id;
+        }
+
+        if (is_null($id)) {
+            if (count($backups_list) > 1) {
+                $helper = $this->getHelper('question');
+                $question = new ChoiceQuestion(
+                    'Choose a backup?',
+                    $backups_names,
+                    0
+                );
+                $question->setErrorMessage('Option %s is invalid.');
+                $backup_name = $helper->ask($this->input, $this->output, $question);
+                $id = array_search($backup_name, $backups_names);
+
+                $io->newLine();
+                $io->note('Selected backup: ' . $backup_name);
+            } else {
+                $id = 0;
+            }
         }
 
         $backup = $backups->backup($id, [$this, 'outputProgress']);

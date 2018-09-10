@@ -25,7 +25,7 @@ class Backups
     const BACKUP_DATE_FORMAT = 'YmdHis';
     protected static $backup_dir;
 
-    protected $backups = null;
+    protected static $backups = null;
 
     public function init()
     {
@@ -43,8 +43,6 @@ class Backups
             Folder::create(static::$backup_dir);
         }
     }
-
-
 
     public function onSchedulerInitialized(Event $event)
     {
@@ -75,9 +73,14 @@ class Backups
         return $url;
     }
 
-    public function getBackupProfiles()
+    public static function getBackupProfiles()
     {
-        return Grav::instance()['config']->get('backups.backups');
+        return Grav::instance()['config']->get('backups.profiles');
+    }
+
+    public static function getPurgeConfig()
+    {
+        return Grav::instance()['config']->get('backups.purge');
     }
 
     public function getBackupNames()
@@ -85,21 +88,21 @@ class Backups
         return array_column($this->getBackupProfiles(), 'name');
     }
 
-    public function getTotalBackupsSize()
+    public static function getTotalBackupsSize()
     {
-        $backups = $this->getAvailableBackups();
+        $backups = static::getAvailableBackups();
         $size = array_sum(array_column($backups, 'size'));
 
         return $size ?? 0;
     }
 
-    public function getAvailableBackups()
+    public static function getAvailableBackups($force = false)
     {
-        if (is_null($this->backups)) {
-            $this->backups = [];
+        if ($force || is_null(static::$backups)) {
+            static::$backups = [];
             $backups_itr = new \GlobIterator(static::$backup_dir . '/*.zip', \FilesystemIterator::KEY_AS_FILENAME);
             $inflector = Grav::instance()['inflector'];
-            $long_date_format = DATE_RFC850;
+            $long_date_format = DATE_RFC2822;
 
             /**
              * @var string $name
@@ -107,8 +110,8 @@ class Backups
              */
             foreach ($backups_itr as $name => $file) {
 
-                if (preg_match($this::BACKUP_FILENAME_REGEXZ, $name, $matches)) {
-                    $date = \DateTime::createFromFormat($this::BACKUP_DATE_FORMAT, $matches[2]);
+                if (preg_match(static::BACKUP_FILENAME_REGEXZ, $name, $matches)) {
+                    $date = \DateTime::createFromFormat(static::BACKUP_DATE_FORMAT, $matches[2]);
                     $timestamp = $date->getTimestamp();
                     $backup = new \stdClass();
                     $backup->title = $inflector->titleize($matches[1]);
@@ -117,15 +120,14 @@ class Backups
                     $backup->filename = $name;
                     $backup->path = $file->getPathname();
                     $backup->size = $file->getSize();
-                    $this->backups[$timestamp] = $backup;
+                    static::$backups[$timestamp] = $backup;
                 }
-
             }
             // Reverse Key Sort to get in reverse date order
-            krsort($this->backups);
+            krsort(static::$backups);
         }
 
-        return $this->backups;
+        return static::$backups;
     }
 
     /**
@@ -139,11 +141,12 @@ class Backups
     public static function backup($id = 0, callable $status = null)
     {
         $config = Grav::instance()['config']->get('backups');
+        $profiles = static::getBackupProfiles();
         /** @var UniformResourceLocator $locator */
         $locator = Grav::instance()['locator'];
 
-        if (isset($config['backups'][$id])) {
-            $backup = (object) $config['backups'][$id];
+        if (isset($profiles[$id])) {
+            $backup = (object) $profiles[$id];
         } else {
             throw new \RuntimeException('No backups defined...');
         }
@@ -191,7 +194,50 @@ class Backups
         // Log the backup
         Grav::instance()['log']->error('Backup Created: ' . $destination);
 
+        // Purge anything required
+        static::purge();
+
         return $destination;
+    }
+
+    public static function purge()
+    {
+        $purge_config = static::getPurgeConfig();
+        $trigger = $purge_config['trigger'];
+        $backups = static::getAvailableBackups(true);
+
+        switch ($trigger)
+        {
+            case 'number':
+                $backups_count = count($backups);
+                if ($backups_count > $purge_config['max_backups_count']) {
+                    $last = end($backups);
+                    unlink ($last->path);
+                    static::purge();
+                }
+
+                break;
+
+            case 'time':
+                $last = end($backups);
+                $now = new \DateTime();
+                $interval = $now->diff($last->time);
+                if ($interval->days > $purge_config['max_backups_time']) {
+                    unlink($last->path);
+                    static::purge();
+                }
+                break;
+
+            default:
+                $used_space = static::getTotalBackupsSize();
+                $max_space = $purge_config['max_backups_space'] * 1024 * 1024 *  1024;
+                if ($used_space > $max_space) {
+                    $last = end($backups);
+                    unlink($last->path);
+                    static::purge();
+                }
+                break;
+        }
     }
 
     protected static function convertExclude($exclude)

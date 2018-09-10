@@ -14,10 +14,22 @@ form:
 
         config_title:
             type: section
-            title: PLUGIN_ADMIN.BACKUPS_CONFIG
+            title: PLUGIN_ADMIN.BACKUPS_PURGE_CONFIG
             underline: true
 
-        max_backups_count:
+        purge.trigger:
+            type: select
+            label: Backup Storage Purge Trigger
+            size: medium
+            default: space
+            options:
+                space: Maximum Backup Space
+                number: Maximum Number of Backups
+                time: maximum Rention Time
+            validate:
+                required: true
+
+        purge.max_backups_count:
             type: number
             label: Maximum Number of Backups
             default: 25
@@ -29,7 +41,7 @@ form:
                 required: true
                 message: Must be a number 0 or greater
 
-        max_backups_space:
+        purge.max_backups_space:
             type: number
             label: Maximum Backups Space
             append: in GB
@@ -41,7 +53,7 @@ form:
                 required: true
                 message: Space must be 1GB or greater
 
-        max_backups_time:
+        purge.max_backups_time:
             type: number
             label: Maximum Rention Time
             append: in Days
@@ -53,19 +65,12 @@ form:
                 required: true
                 message: Rentenion days must be 7 or greater
 
-        purge_at:
-          type: cron
-          label: Run Purge Job
-          default: '* * * * *'
-          validate:
-            required: true
-
         profiles_title:
           type: section
           title: PLUGIN_ADMIN.BACKUPS_PROFILES
           underline: true
 
-        backups:
+        profiles:
           type: list
           style: vertical
           label:

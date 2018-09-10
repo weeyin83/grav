@@ -1,9 +1,10 @@
-max_backups_count: 25
-max_backups_space: 5
-max_backups_time: 365
-purge_at: '0 1 * * *'
+purge:
+    trigger: space
+    max_backups_count: 25
+    max_backups_space: 5
+    max_backups_time: 365
 
-backups:
+profiles:
   -
     name: 'Default Site Backup'
     root: '/'
