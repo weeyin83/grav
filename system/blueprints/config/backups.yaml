@@ -23,6 +23,8 @@ form:
             default: 25
             size: x-small
             help: "0 is unlimited"
+            validate:
+                required: true
 
         max_backups_space:
             type: int
@@ -30,6 +32,8 @@ form:
             append: in GB
             size: x-small
             default: 5
+            validate:
+                required: true
 
         max_backups_time:
             type: int
@@ -37,6 +41,8 @@ form:
             append: in Days
             size: x-small
             default: 365
+            validate:
+                required: true
 
         purge_at:
           type: cron
