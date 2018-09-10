@@ -75,7 +75,7 @@ class SchedulerCommand extends ConsoleCommand
         if ($this->input->getOption('jobs')) {
             // Show jobs list
 
-            $jobs = $scheduler->loadSavedJobs()->getAllJobs();
+            $jobs = $scheduler->getAllJobs();
             $job_states = $scheduler->getJobStates()->content();
             $rows = [];
 
