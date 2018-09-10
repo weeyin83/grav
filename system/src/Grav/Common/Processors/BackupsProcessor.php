@@ -18,7 +18,6 @@ class BackupsProcessor extends ProcessorBase implements ProcessorInterface
     public function process()
     {
         $backups = $this->container['backups'];
-        $backups->setup();
-        $this->container->fireEvent('onBackupsInitialized', new Event(['backups' => $backups]));
+        $backups->init();
     }
 }

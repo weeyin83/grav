@@ -23,8 +23,10 @@ class Scheduler
      */
     private $jobs = [];
     private $saved_jobs = [];
+    private $executed_jobs = [];
+    private $failed_jobs = [];
     private $jobs_run = [];
-    private $outputSchedule = [];
+    private $output_schedule = [];
     private $config;
     private $status_path;
 
@@ -37,7 +39,6 @@ class Scheduler
     {
         $config = Grav::instance()['config']->get('scheduler.defaults', []);
         $this->config = $config;
-        $this->loadSavedJobs();
 
         $this->status_path = Grav::instance()['locator']->findResource('user://data/scheduler', true, true);
         if (!file_exists($this->status_path)) {
@@ -49,34 +50,33 @@ class Scheduler
     /**
      * Load saved jobs from config/scheduler.yaml file
      */
-    public function loadSavedJobs($force = false)
+    public function loadSavedJobs()
     {
-        if ($force || !$this->jobs) {
-            $this->jobs = [];
-            $saved_jobs = (array) Grav::instance()['config']->get('scheduler.custom_jobs', []);
+        $this->saved_jobs = [];
+        $saved_jobs = (array) Grav::instance()['config']->get('scheduler.custom_jobs', []);
 
-            foreach ($saved_jobs as $id => $j) {
-                $args = isset($j['args']) ? $j['args'] : [];
-                $id = Grav::instance()['inflector']->hyphenize($id);
-                $job = $this->addCommand($j['command'], $args, $id);
+        foreach ($saved_jobs as $id => $j) {
+            $args = isset($j['args']) ? $j['args'] : [];
+            $id = Grav::instance()['inflector']->hyphenize($id);
+            $job = $this->addCommand($j['command'], $args, $id);
 
-                if (isset($j['at'])) {
-                    $job->at($j['at']);
-                }
-
-                if (isset($j['output'])) {
-                    $mode = isset($j['output_mode']) && $j['output_mode'] === 'append' ? true : false;
-                    $job->output($j['output'], $mode);
-                }
-
-                if (isset($j['email'])) {
-                    $job->email($j['email']);
-                }
-
-                // store in saved_jobs
-                $this->saved_jobs[] = $job;
+            if (isset($j['at'])) {
+                $job->at($j['at']);
             }
+
+            if (isset($j['output'])) {
+                $mode = isset($j['output_mode']) && $j['output_mode'] === 'append' ? true : false;
+                $job->output($j['output'], $mode);
+            }
+
+            if (isset($j['email'])) {
+                $job->email($j['email']);
+            }
+
+            // store in saved_jobs
+            $this->saved_jobs[] = $job;
         }
+
         return $this;
     }
 
@@ -111,7 +111,7 @@ class Scheduler
      */
     public function getAllJobs()
     {
-        list($background, $foreground) = $this->getQueuedJobs(true);
+        list($background, $foreground) = $this->loadSavedJobs()->getQueuedJobs(true);
         return array_merge($background, $foreground);
     }
 
@@ -153,6 +153,8 @@ class Scheduler
      */
     public function run(\Datetime $runTime = null)
     {
+        $this->loadSavedJobs();
+
         list($background, $foreground) = $this->getQueuedJobs(false);
         $alljobs = array_merge($background, $foreground);
 
@@ -185,9 +187,9 @@ class Scheduler
     public function resetRun()
     {
         // Reset collected data of last run
-        $this->executedJobs = [];
-        $this->failedJobs = [];
-        $this->outputSchedule = [];
+        $this->executed_jobs = [];
+        $this->failed_jobs = [];
+        $this->output_schedule = [];
         return $this;
     }
 
@@ -201,11 +203,11 @@ class Scheduler
     {
         switch ($type) {
             case 'text':
-                return implode("\n", $this->outputSchedule);
+                return implode("\n", $this->output_schedule);
             case 'html':
-                return implode('<br>', $this->outputSchedule);
+                return implode('<br>', $this->output_schedule);
             case 'array':
-                return $this->outputSchedule;
+                return $this->output_schedule;
             default:
                 throw new \InvalidArgumentException('Invalid output type');
         }
@@ -311,7 +313,7 @@ class Scheduler
     private function addSchedulerVerboseOutput($string)
     {
         $now = '[' . (new \DateTime('now'))->format('c') . '] ';
-        $this->outputSchedule[] = $now . $string;
+        $this->output_schedule[] = $now . $string;
         // Print to stdoutput in light gray
         // echo "\033[37m{$string}\033[0m\n";
     }
@@ -324,7 +326,7 @@ class Scheduler
      */
     private function pushExecutedJob(Job $job)
     {
-        $this->executedJobs[] = $job;
+        $this->executed_jobs[] = $job;
         $command = $job->getCommand();
         $args = $job->getArguments();
         // If callable, log the string Closure
@@ -343,7 +345,7 @@ class Scheduler
      */
     private function pushFailedJob(Job $job)
     {
-        $this->failedJobs[] = $job;
+        $this->failed_jobs[] = $job;
         $command = $job->getCommand();
         // If callable, log the string Closure
         if (is_callable($command)) {

@@ -29,18 +29,22 @@ class Backups
 
     public function init()
     {
+        /** @var EventDispatcher $dispatcher */
+        $dispatcher = Grav::instance()['events'];
+        $dispatcher->addListener('onSchedulerInitialized', [$this, 'onSchedulerInitialized']);
+
+        Grav::instance()->fireEvent('onBackupsInitialized', new Event(['backups' => $this]));
+    }
+
+    public function setup()
+    {
         if (is_null(static::$backup_dir)) {
             static::$backup_dir = Grav::instance()['locator']->findResource('backup://', true, true);
             Folder::create(static::$backup_dir);
         }
     }
 
-    public function setup()
-    {
-        /** @var EventDispatcher $dispatcher */
-        $dispatcher = Grav::instance()['events'];
-        $dispatcher->addListener('onSchedulerInitialized', [$this, 'onSchedulerInitialized']);
-    }
+
 
     public function onSchedulerInitialized(Event $event)
     {

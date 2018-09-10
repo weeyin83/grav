@@ -18,7 +18,6 @@ class SchedulerProcessor extends ProcessorBase implements ProcessorInterface
     public function process()
     {
         $scheduler = $this->container['scheduler'];
-        $scheduler->loadSavedJobs();
         $this->container->fireEvent('onSchedulerInitialized', new Event(['scheduler' => $scheduler]));
     }
 }
