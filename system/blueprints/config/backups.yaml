@@ -18,31 +18,40 @@ form:
             underline: true
 
         max_backups_count:
-            type: int
+            type: number
             label: Maximum Number of Backups
             default: 25
             size: x-small
             help: "0 is unlimited"
             validate:
+                min: 0
+                type: number
                 required: true
+                message: Must be a number 0 or greater
 
         max_backups_space:
-            type: int
+            type: number
             label: Maximum Backups Space
             append: in GB
             size: x-small
             default: 5
             validate:
+                min: 1
+                type: number
                 required: true
+                message: Space must be 1GB or greater
 
         max_backups_time:
-            type: int
+            type: number
             label: Maximum Rention Time
             append: in Days
             size: x-small
             default: 365
             validate:
+                min: 7
+                type: number
                 required: true
+                message: Rentenion days must be 7 or greater
 
         purge_at:
           type: cron
