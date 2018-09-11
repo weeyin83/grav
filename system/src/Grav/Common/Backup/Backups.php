@@ -22,7 +22,9 @@ use RocketTheme\Toolbox\ResourceLocator\UniformResourceLocator;
 class Backups
 {
     const BACKUP_FILENAME_REGEXZ = "#(.*)--(\d*).zip#";
+
     const BACKUP_DATE_FORMAT = 'YmdHis';
+
     protected static $backup_dir;
 
     protected static $backups = null;
@@ -32,7 +34,6 @@ class Backups
         /** @var EventDispatcher $dispatcher */
         $dispatcher = Grav::instance()['events'];
         $dispatcher->addListener('onSchedulerInitialized', [$this, 'onSchedulerInitialized']);
-
         Grav::instance()->fireEvent('onBackupsInitialized', new Event(['backups' => $this]));
     }
 
@@ -66,10 +67,10 @@ class Backups
     public function getBackupDownloadUrl($backup, $base_url)
     {
         $param_sep = $param_sep = Grav::instance()['config']->get('system.param_sep', ':');
-
         $download = urlencode(base64_encode($backup));
         $url      = rtrim(Grav::instance()['uri']->rootUrl(true), '/') . '/' . trim($base_url,
                 '/') . '/task' . $param_sep . 'backup/download' . $param_sep . $download . '/admin-nonce' . $param_sep . Utils::getNonce('admin-form');
+
         return $url;
     }
 
@@ -168,8 +169,8 @@ class Backups
         }
 
         $options = [
-            'exclude_files' => static::convertExclude($backup->exclude_files),
-            'exclude_paths' => static::convertExclude($backup->exclude_paths),
+            'exclude_files' => static::convertExclude($backup->exclude_files ?? ''),
+            'exclude_paths' => static::convertExclude($backup->exclude_paths ?? ''),
         ];
 
         /** @var Archiver $archiver */
@@ -193,6 +194,9 @@ class Backups
         // Log the backup
         Grav::instance()['log']->error('Backup Created: ' . $destination);
 
+        // Fire Finished event
+        Grav::instance()->fireEvent('onBackupFinished', new Event(['backup' => $destination]));
+
         // Purge anything required
         static::purge();
 
@@ -214,7 +218,6 @@ class Backups
                     unlink ($last->path);
                     static::purge();
                 }
-
                 break;
 
             case 'time':
@@ -244,5 +247,4 @@ class Backups
         $lines = preg_split("/[\s,]+/", $exclude);
         return array_map('trim', $lines, array_fill(0,count($lines),'/'));
     }
-
 }
