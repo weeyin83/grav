@@ -140,7 +140,6 @@ class Backups
      */
     public static function backup($id = 0, callable $status = null)
     {
-        $config = Grav::instance()['config']->get('backups');
         $profiles = static::getBackupProfiles();
         /** @var UniformResourceLocator $locator */
         $locator = Grav::instance()['locator'];
