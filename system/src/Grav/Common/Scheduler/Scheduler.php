@@ -10,6 +10,7 @@ namespace Grav\Common\Scheduler;
 
 use Grav\Common\Filesystem\Folder;
 use Grav\Common\Grav;
+use Grav\Common\Utils;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 use RocketTheme\Toolbox\File\YamlFile;
@@ -255,7 +256,12 @@ class Scheduler
                 return 0;
             }
         } else {
-            return 2;
+            $error = $process->getErrorOutput();
+            if (Utils::startsWith($error, 'crontab: no crontab')) {
+                return 0;
+            } else {
+                return 2;
+            }
         }
     }
 
