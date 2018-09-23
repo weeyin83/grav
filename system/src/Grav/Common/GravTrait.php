@@ -9,7 +9,7 @@
 namespace Grav\Common;
 
 /**
- * @deprecated 1.4 Use Grav::instance() instead
+ * @deprecated 2.0
  */
 trait GravTrait
 {
@@ -24,7 +24,8 @@ trait GravTrait
             self::$grav = Grav::instance();
         }
 
-        user_error(__TRAIT__ . ' is deprecated since Grav 1.4, use Grav::instance() instead', E_USER_DEPRECATED);
+        $caller = self::$grav['debugger']->getCaller();
+        self::$grav['debugger']->addMessage("Deprecated GravTrait used in {$caller['file']}", 'deprecated');
 
         return self::$grav;
     }

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @package    Grav.Core
  *
@@ -8,7 +7,6 @@
  */
 
 namespace Grav;
-
 define('GRAV_PHP_MIN', '5.6.4');
 
 // Ensure vendor libraries exist
@@ -31,7 +29,7 @@ if (version_compare($ver = PHP_VERSION, $req = GRAV_PHP_MIN, '<')) {
 }
 
 // Register the auto-loader.
-$loader = require $autoload;
+$loader = require_once $autoload;
 
 // Set timezone to default, falls back to system if php.ini not set
 date_default_timezone_set(@date_default_timezone_get());

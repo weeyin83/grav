@@ -8,7 +8,7 @@
 
 namespace Grav\Common\Twig\Node;
 
-class TwigNodeStyle extends \Twig_Node implements \Twig_NodeCaptureInterface
+class TwigNodeStyle extends \Twig_Node implements \Twig_NodeOutputInterface
 {
     protected $tagName = 'style';
 

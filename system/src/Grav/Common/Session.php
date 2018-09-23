@@ -15,12 +15,10 @@ class Session extends \Grav\Framework\Session\Session
 
     /**
      * @return \Grav\Framework\Session\Session
-     * @deprecated 1.5 Use getInstance() method instead
+     * @deprecated 1.5
      */
     public static function instance()
     {
-        user_error(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated since Grav 1.5, use getInstance() method instead', E_USER_DEPRECATED);
-
         return static::getInstance();
     }
 
@@ -53,12 +51,10 @@ class Session extends \Grav\Framework\Session\Session
      * Returns attributes.
      *
      * @return array Attributes
-     * @deprecated 1.5 Use getAll() method instead
+     * @deprecated 1.5
      */
     public function all()
     {
-        user_error(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated since Grav 1.5, use getAll() method instead', E_USER_DEPRECATED);
-
         return $this->getAll();
     }
 
@@ -66,12 +62,10 @@ class Session extends \Grav\Framework\Session\Session
      * Checks if the session was started.
      *
      * @return Boolean
-     * @deprecated 1.5 Use isStarted() method instead
+     * @deprecated 1.5
      */
     public function started()
     {
-        user_error(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated since Grav 1.5, use isStarted() method instead', E_USER_DEPRECATED);
-
         return $this->isStarted();
     }
 

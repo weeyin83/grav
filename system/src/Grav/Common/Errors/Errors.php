@@ -74,8 +74,5 @@ class Errors
         }
 
         $whoops->register();
-
-        // Re-register deprecation handler.
-        $grav['debugger']->setErrorHandler();
     }
 }

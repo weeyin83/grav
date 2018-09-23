@@ -105,9 +105,9 @@ class TwigExtension extends \Twig_Extension implements \Twig_Extension_GlobalsIn
 
             // Casting values
             new \Twig_SimpleFilter('string', [$this, 'stringFilter']),
-            new \Twig_SimpleFilter('int', [$this, 'intFilter'], ['is_safe' => ['all']]),
+            new \Twig_SimpleFilter('int', [$this, 'intFilter'], ['is_safe' => true]),
             new \Twig_SimpleFilter('bool', [$this, 'boolFilter']),
-            new \Twig_SimpleFilter('float', [$this, 'floatFilter'], ['is_safe' => ['all']]),
+            new \Twig_SimpleFilter('float', [$this, 'floatFilter'], ['is_safe' => true]),
             new \Twig_SimpleFilter('array', [$this, 'arrayFilter']),
         ];
     }
@@ -155,7 +155,7 @@ class TwigExtension extends \Twig_Extension implements \Twig_Extension_GlobalsIn
             new \Twig_SimpleFunction('read_file', [$this, 'readFileFunc']),
             new \Twig_SimpleFunction('nicenumber', [$this, 'niceNumberFunc']),
             new \Twig_SimpleFunction('nicefilesize', [$this, 'niceFilesizeFunc']),
-            new \Twig_SimpleFunction('nicetime', [$this, 'nicetimeFunc']),
+            new \Twig_SimpleFunction('nicetime', [$this, 'nicetimeFilter']),
 
             // Translations
             new \Twig_simpleFunction('t', [$this, 'translate']),

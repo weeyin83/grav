@@ -91,7 +91,7 @@ class SessionServiceProvider implements ServiceProviderInterface
 
         // Define session message service.
         $container['messages'] = function ($c) {
-            if (!isset($c['session']) || !$c['session']->isStarted()) {
+            if (!isset($c['session']) || !$c['session']->started()) {
                 /** @var Debugger $debugger */
                 $debugger = $c['debugger'];
                 $debugger->addMessage('Inactive session: session messages may disappear', 'warming');

@@ -33,8 +33,6 @@ class MarkdownFormatter implements FormatterInterface
      */
     public function getFileExtension()
     {
-        user_error(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated since Grav 1.5, use getDefaultFileExtension() method instead', E_USER_DEPRECATED);
-
         return $this->getDefaultFileExtension();
     }
 

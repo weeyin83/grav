@@ -8,7 +8,7 @@
 
 namespace Grav\Common\Twig\Node;
 
-class TwigNodeScript extends \Twig_Node implements \Twig_NodeCaptureInterface
+class TwigNodeScript extends \Twig_Node implements \Twig_NodeOutputInterface
 {
     protected $tagName = 'script';
 
